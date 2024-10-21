@@ -39,15 +39,15 @@ def upload_pdf():
                         parts = line.split()  # Ajuste conforme necessário
                         if len(parts) >= 9:  # Certifique-se de que tem dados suficientes
                             data = {
-                                "#": parts[0],
-                                "Transporter ID": parts[1],
-                                "Desempenho Score": parts[2],
-                                "Pacotes Entregues": parts[3],
+                                "ID": parts[0],
+                                "Transporter_ID": parts[1],
+                                "Desempenho_Score": parts[2],
+                                "Pacotes_Entregues": parts[3],
                                 "DCR": parts[4],
-                                "DNR DPMO": parts[5],
-                                "Contact Compliance": parts[6],
-                                "Swipe to Finish Compliance": parts[7],
-                                "100% WHC": parts[8],
+                                "DNR_DPMO": parts[5],
+                                "Contact_Compliance": parts[6],
+                                "Swipe_to_Finish_Compliance": parts[7],
+                                "WHC": parts[8],
                                 "Desempenho": ' '.join(parts[9:])  # Pega o restante como "Desempenho"
                             }
                             extracted_data.append(data)
