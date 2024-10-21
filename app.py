@@ -18,28 +18,41 @@ def upload_pdf():
     if file and file.filename.endswith('.pdf'):
         pdf_reader = PyPDF2.PdfReader(file)
         
-        # Inicializando uma lista para armazenar dados extraídos
-        extracted_data = []
-        
-        # Percorrendo as páginas do PDF
+        # Inicializando variáveis
+        content_between_keywords = []
+        capturing = False
+
+        # Extrair texto e capturar entre as palavras-chave
         for page in pdf_reader.pages:
             text = page.extract_text()
-            if text:
-                # Aqui você deve processar o texto para extrair dados relevantes
-                # Exemplo de como dividir o texto em linhas e colunas (ajuste conforme necessário)
-                lines = text.split('\n')  # Divida o texto em linhas
-                for line in lines:
-                    # Divida cada linha em colunas (ajuste o delimitador conforme necessário)
-                    columns = line.split()  # Aqui você pode usar um delimitador específico
-                    extracted_data.append(columns)  # Adicione a linha extraída à lista
-        
-        # Crie um DataFrame a partir da lista extraída
-        df = pd.DataFrame(extracted_data)
-        
-        # Retorne o DataFrame como JSON
-        return jsonify(df.to_dict(orient='records'))  # Convertendo o DataFrame para um formato JSON
+            if "DAs classificados por pontuação geral, em ordem decrescente..." in text:
+                capturing = True
+            elif "Definição das Métricas" in text:
+                capturing = False
+
+            if capturing:
+                content_between_keywords.append(text)
+
+        # Processar e formatar o conteúdo capturado
+        df = process_extracted_content(content_between_keywords)
+
+        return jsonify(df.to_dict(orient='records'))  # Retornar como JSON
 
     return jsonify({'error': 'Invalid file type'})
+
+def process_extracted_content(content):
+    # Aqui você deve implementar a lógica para formatar o conteúdo extraído em um DataFrame
+    # Exemplo básico para transformar em um DataFrame
+    data = []
+    for entry in content:
+        lines = entry.splitlines()
+        for line in lines:
+            if line.strip():  # Ignora linhas vazias
+                data.append(line.split(','))  # Supondo que os dados estão separados por vírgula
+    
+    # Ajuste conforme necessário para formar o DataFrame corretamente
+    columns = ["#", "Transporter ID", "Desempenho Score", "Pacotes Entregues", "DCR", "DNR DPMO", "Contact Compliance", "Swipe to Finish Compliance", "100% WHC", "Desempenho"]
+    return pd.DataFrame(data, columns=columns)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
