@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 import pandas as pd
-from io import BytesIO
-import PyPDF2  # Certifique-se de ter esta biblioteca instalada
+import pdfplumber  # Use pdfplumber para melhor extração de texto
 
 app = Flask(__name__)
 
@@ -16,43 +15,46 @@ def upload_pdf():
         return jsonify({'error': 'No selected file'})
     
     if file and file.filename.endswith('.pdf'):
-        pdf_reader = PyPDF2.PdfReader(file)
-        
-        # Inicializando variáveis
-        content_between_keywords = []
-        capturing = False
+        # Armazena as informações extraídas
+        extracted_data = []
 
-        # Extrair texto e capturar entre as palavras-chave
-        for page in pdf_reader.pages:
-            text = page.extract_text()
-            if "DAs classificados por pontuação geral, em ordem decrescente..." in text:
-                capturing = True
-            elif "Definição das Métricas" in text:
-                capturing = False
+        with pdfplumber.open(file) as pdf:
+            capturing = False
+            for page in pdf.pages:
+                text = page.extract_text()
+                lines = text.split('\n')  # Divide o texto em linhas
+                
+                # Verifica se está entre as palavras-chave
+                for line in lines:
+                    if "DAs classificados por pontuação geral, em ordem decrescente..." in line:
+                        capturing = True
+                        continue
+                    elif "Definição das Métricas" in line:
+                        capturing = False
+                        break
 
-            if capturing:
-                content_between_keywords.append(text)
+                    if capturing:
+                        # Aqui você deve processar cada linha capturada
+                        # Por exemplo, vamos assumir que cada linha tem os dados separados por espaços
+                        parts = line.split()  # Ajuste isso conforme necessário
+                        if len(parts) >= 9:  # Verifica se há dados suficientes
+                            data = {
+                                "#": parts[0],
+                                "Transporter ID": parts[1],
+                                "Desempenho Score": parts[2],
+                                "Pacotes Entregues": parts[3],
+                                "DCR": parts[4],
+                                "DNR DPMO": parts[5],
+                                "Contact Compliance": parts[6],
+                                "Swipe to Finish Compliance": parts[7],
+                                "100% WHC": parts[8],
+                                "Desempenho": ' '.join(parts[9:])  # Pega o restante como "Desempenho"
+                            }
+                            extracted_data.append(data)
 
-        # Processar e formatar o conteúdo capturado
-        df = process_extracted_content(content_between_keywords)
-
-        return jsonify(df.to_dict(orient='records'))  # Retornar como JSON
+        return jsonify(extracted_data)  # Retorna os dados como JSON
 
     return jsonify({'error': 'Invalid file type'})
-
-def process_extracted_content(content):
-    # Aqui você deve implementar a lógica para formatar o conteúdo extraído em um DataFrame
-    # Exemplo básico para transformar em um DataFrame
-    data = []
-    for entry in content:
-        lines = entry.splitlines()
-        for line in lines:
-            if line.strip():  # Ignora linhas vazias
-                data.append(line.split(','))  # Supondo que os dados estão separados por vírgula
-    
-    # Ajuste conforme necessário para formar o DataFrame corretamente
-    columns = ["#", "Transporter ID", "Desempenho Score", "Pacotes Entregues", "DCR", "DNR DPMO", "Contact Compliance", "Swipe to Finish Compliance", "100% WHC", "Desempenho"]
-    return pd.DataFrame(data, columns=columns)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
