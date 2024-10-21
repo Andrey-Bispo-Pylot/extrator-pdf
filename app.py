@@ -26,7 +26,7 @@ def upload_pdf():
                 
                 # Verifica se está entre as palavras-chave
                 for line in lines:
-                    if "DAs classificados por pontuação geral, em ordem decrescente..." in line:
+                    if "DAs classificados por pontuação geral, em ordem decrescente" in line:
                         capturing = True
                         continue
                     elif "Definição das Métricas" in line:
