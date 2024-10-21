@@ -34,10 +34,10 @@ def upload_pdf():
                         break
 
                     if capturing:
-                        # Aqui você deve processar cada linha capturada
-                        # Por exemplo, vamos assumir que cada linha tem os dados separados por espaços
-                        parts = line.split()  # Ajuste isso conforme necessário
-                        if len(parts) >= 9:  # Verifica se há dados suficientes
+                        # Processa cada linha capturada
+                        # Pode ser necessário ajustar a lógica de como você extrai os dados
+                        parts = line.split()  # Ajuste conforme necessário
+                        if len(parts) >= 9:  # Certifique-se de que tem dados suficientes
                             data = {
                                 "#": parts[0],
                                 "Transporter ID": parts[1],
